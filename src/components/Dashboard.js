@@ -5,6 +5,7 @@ import classnames from "classnames";
 import Loading from "./Loading";
 import Panel from "./Panel";
 
+import { setInterview } from "helpers/reducers";
 import {
 	getTotalInterviews,
 	getLeastPopularTimeSlot,
@@ -60,6 +61,18 @@ class Dashboard extends Component {
 			});
 		});
 
+		this.socket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
+
+		this.socket.onmessage = event => {
+			const data = JSON.parse(event.data);
+		
+			if (typeof data === "object" && data.type === "SET_INTERVIEW") {
+				this.setState(previousState =>
+					setInterview(previousState, data.id, data.interview)
+				);
+			}
+		};
+
     if (focused) {
       this.setState({ focused });
     }
@@ -70,6 +83,10 @@ class Dashboard extends Component {
       localStorage.setItem("focused", JSON.stringify(this.state.focused));
     }
   }
+
+	componentWillUnmount() {
+		this.socket.close();
+	}
 
 	selectPanel(id) {
 		this.setState(previousState => ({
